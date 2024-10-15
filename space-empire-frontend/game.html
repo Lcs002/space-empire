@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Space Game</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Full height of viewport */
+        }
+
+        #top-bar {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        #main-content {
+            display: flex;
+            flex: 1; /* Occupies all available space after the top and bottom bars */
+            margin-top: 10px;
+            height: calc(100vh - 100px); /* Full height minus the top and bottom bar heights */
+        }
+
+        #left-bar, #planet-info {
+            background-color: #111;
+            color: white;
+            width: 20vw; /* 1/5 of the window width */
+            padding: 20px;
+            box-sizing: border-box;
+            height: calc(100%); /* Occupies the full height of main-content */
+            overflow-y: auto;
+        }
+
+        #pixi-container-wrapper {
+            flex: 3; /* 3/5 of the window width */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%; /* Matches the full height of main-content */
+        }
+
+        #pixi-container {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background-color: #040404;
+        }
+
+        #bottom-bar {
+            background-color: #222;
+            color: white;
+            text-align: center;
+            height: 10vw; /* Fixed height for the bottom bar */
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div id="top-bar">
+        <span id="username">Player</span>
+    </div>
+
+    <div id="main-content">
+        <div id="left-bar">
+            <h3>Owned Planets</h3>
+            <ul id="planet-list">
+                <!-- Planet names will be dynamically added here -->
+            </ul>
+            <!-- Add any player actions or game stats here -->
+        </div>
+        <div id="pixi-container-wrapper">
+            <div id="pixi-container"></div>
+        </div>
+        <div id="planet-info">
+            <h3>Planet Info</h3>
+            <div id="planet-details">
+                <!-- Planet details will be shown here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="bottom-bar">
+        <p>This is the bottom bar. Add any content here.</p>
+    </div>
+
+    <script src="game.js" type="module"></script>
+</body>
+</html>

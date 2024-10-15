@@ -1,0 +1,7 @@
+{
+    "port": 4201,
+    "server": {
+      "baseDir": "./",
+      "index": "login.html"
+    }
+  }
