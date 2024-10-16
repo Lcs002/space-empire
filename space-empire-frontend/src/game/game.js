@@ -2,8 +2,7 @@ import { Application, Container, Graphics, Point } from "pixi.js";
 import Color from 'color';
 import { Button } from "@pixi/ui";
 import { io } from "socket.io-client";
-import { Player } from "../shared/models/player";
-import { Planet } from "../shared/models/planet";
+import { Player, Planet } from 'shared';
 
 // Constants
 const STP = 0.8;
@@ -19,7 +18,7 @@ const username = localStorage.getItem('username');
 // Verify user authentication
 if (!token) {
     alert('You must be logged in to play the game.');
-    window.location.href = '/login.html'; // Redirect to login page
+    window.location.href = '../auth/login.html'; // Redirect to login page
 }
 
 // Set up the WebSocket connection
@@ -33,6 +32,8 @@ let cameraPosition = { x: 0, y: 0 }; // Initial camera position
 let renderedPlanets = new Map() // To track which planets are currently rendered
 
 const pixiContainer = document.getElementById("pixi-container");
+const playerName = document.getElementById("username");
+playerName.textContent = username;
 let highlightedPlanet = null;
 
 // Initialize PIXI application
@@ -62,7 +63,7 @@ function requestPlanetsInRange(x, y, radius) {
 socket.on('connect_error', (err) => {
     console.error('Authentication error:', err.message);
     alert('Session expired or invalid token. Please log in again.');
-    window.location.href = '/login.html'; // Redirect to login page
+    window.location.href = '../auth/login.html'; // Redirect to login page
 });
 
 // Setup socket event listeners
@@ -89,7 +90,6 @@ function setupSocketListeners() {
     });
 
     socket.on('foundNearbyPlanets', (planets) => {
-        console.log(planets);
         planets.forEach(renderPlanet);
     });
 }

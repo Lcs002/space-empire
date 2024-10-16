@@ -21,7 +21,7 @@ form.addEventListener('submit', async (event) => {
             localStorage.setItem('token', token);
             localStorage.setItem('username', username);
             // Redirect to game page
-            window.location.href = '/game.html';
+            window.location.href = '../game/game.html';
         } else {
             alert('Invalid credentials');
         }

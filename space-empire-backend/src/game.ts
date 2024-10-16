@@ -59,10 +59,11 @@ function requestNearbyPlanets(socket: Socket, username: string) {
   player.ownedPlanets.forEach(ownedPlanet => {
     const planet : Planet | undefined = planets.getByKey(ownedPlanet);
     if (planet === undefined) return;
+    nearbyPlanets.push(planet);
     const results = quadtree.query(new QuadT.Circle(planet.position.x, planet.position.y, 800));
     results.forEach(point => {
       const nearbyPlanet = planets.getByKey(point.data.uuid);
-      if (nearbyPlanet && nearbyPlanet.owner !== username) {
+      if (nearbyPlanet && !nearbyPlanets.includes(nearbyPlanet)) {
         nearbyPlanets.push(nearbyPlanet);
       }
     });

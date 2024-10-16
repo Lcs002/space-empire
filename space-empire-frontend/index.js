@@ -2,9 +2,7 @@
 const token = localStorage.getItem('token');
 
 if (!token) {
-    // If not logged in, redirect to login page
-    window.location.href = 'login.html';
+    window.location.href = './src/auth/login.html';
 } else {
-    // Optionally, you can redirect to the game if the token exists
-    window.location.href = 'game.html';
+    window.location.href = './src/game/game.html';
 }
