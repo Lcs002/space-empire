@@ -3,8 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { users } from './server';
 import { planets } from './game';
-import { Player } from '../../shared/models/player';
-import { Planet } from '../../shared/models/planet';
+import { Planet, Player } from 'shared';
 
 const JWT_SECRET = 'your_jwt_secret_key';
 

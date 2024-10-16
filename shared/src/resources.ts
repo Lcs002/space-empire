@@ -1,10 +1,10 @@
-enum ResourceTypes {
+export enum ResourceTypes {
     BIO = 'Bio',
     MINERAL = 'Mineral',
     GAS = 'Gas'
 }
 
-class Resources {
+export class Resources {
     bio: number;
     mineral: number;
     gas: number;
@@ -14,5 +14,3 @@ class Resources {
         this.gas = gas
     }
 }
-
-export { Resources, ResourceTypes }

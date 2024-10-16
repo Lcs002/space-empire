@@ -1,13 +1,12 @@
-import { Point } from "js-quadtree";
-import { Player } from "../../space-empire-backend/src/models/player";
-import { Resources } from "../../space-empire-backend/src/models/resources";
+import { Point } from "./point";
+import { Resources } from "./resources";
 
-enum StructureTypes {
+export enum StructureTypes {
     MINERAL_GATHERER = 'Mineral Gatherer',
     HOUSING = 'Housing',
 };
 
-enum PlanetSizes {
+export enum PlanetSizes {
     TINY = 'Tiny',
     SMALL = 'Small',
     STANDARD = 'Standard',
@@ -15,7 +14,7 @@ enum PlanetSizes {
     COLOSSAL = 'Colossal'
 }
 
-enum StructureLimits {
+export enum StructureLimits {
     TINY = 2,
     SMALL = 3,
     STANDARD = 4,
@@ -23,7 +22,7 @@ enum StructureLimits {
     COLOSSAL = 6,
 };
 
-class Planet {
+export class Planet {
     uuid: any;
     size: PlanetSizes;
     owner: any;
@@ -98,5 +97,3 @@ class Planet {
         return 0;
     }
 }
-
-export { Planet, StructureLimits, StructureTypes, PlanetSizes };

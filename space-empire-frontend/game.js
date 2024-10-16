@@ -45,11 +45,12 @@ app.stage.addChild(gameContainer);
 // Initialize the game
 (async () => {
     pixiContainer.appendChild(app.canvas);
-    socket.emit('requestNearbyPlanets', username);
     window.onresize = () => app.renderer.resize(pixiContainer.clientWidth, pixiContainer.clientHeight);
     
     setupSocketListeners();
     setupMouseControls();
+
+    socket.emit('requestNearbyPlanets', username);
 })();
 
 // Function to request planets within a certain radius from (x, y)

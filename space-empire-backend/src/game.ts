@@ -1,9 +1,8 @@
 import QuadT from 'js-quadtree';
 import { Server, Socket } from 'socket.io';
-import { Planet } from '../../shared/models/planet';
+import { Planet, Player } from 'shared';
 import { initializeGalaxy } from './galaxyGen';
 import { users } from './server';
-import { Player } from '../../shared/models/player';
 import { IndexedMap } from './util/IndexedMap';
 
 const galaxySize = 100000;

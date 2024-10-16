@@ -1,6 +1,4 @@
-import { Planet } from "./planet";
-
-class Player {
+export class Player {
     username : any;
     password : any;
     ownedPlanets : Array<string>;
@@ -11,5 +9,3 @@ class Player {
         this.ownedPlanets = new Array<string>();
     }
 }
-
-export { Player }

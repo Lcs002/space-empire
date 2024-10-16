@@ -5,7 +5,7 @@ import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { handleConnection, initializeGame } from './game';
 import { register, login } from './auth';
-import { Player } from '../../shared/models/player'; 
+import { Player } from 'shared'; 
 import jwt from 'jsonwebtoken'; 
 
 const app = express();

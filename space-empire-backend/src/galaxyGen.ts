@@ -1,6 +1,5 @@
 import QuadT from 'js-quadtree';
-import { Planet, PlanetSizes } from "../../shared/models/planet";
-import { Resources } from "../../shared/models/resources";
+import { Planet, PlanetSizes, Resources } from '../../shared';
 import { createNoise2D } from 'simplex-noise';
 import { v4 } from 'uuid';
 import { IndexedMap } from './util/IndexedMap';
