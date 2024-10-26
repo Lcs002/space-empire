@@ -27,15 +27,15 @@ export function login(req: Request, res: Response) : Response {
     const player : Player = users[username];
 
     if (player.ownedPlanets.length === 0) {
-        let random : Planet | null = planets.getRandom();
-        if (random === null) throw Error();
-        else {
-            while(!random || random.owner != null) 
-                random = planets.getRandom();
-            random.owner = username;
-            player.ownedPlanets.push(random.uuid);
-            console.log(`Assigned planet ${random.uuid} to player ${username}`);
-        }
+      let random : Planet | null = planets.getRandom();
+      if (random === null) throw Error();
+      else {
+        while(!random || random.owner != null) 
+          random = planets.getRandom();
+        random.owner = username;
+        player.ownedPlanets.push(random.uuid);
+        console.log(`Assigned planet ${random.uuid} to player ${username}`);
+      }
     }
 
     return res.json({ token });

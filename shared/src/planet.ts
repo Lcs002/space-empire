@@ -1,12 +1,12 @@
 import { Point } from "./point";
 import { Resources } from "./resources";
 
-export enum StructureTypes {
+export enum StructureType {
     MINERAL_GATHERER = 'Mineral Gatherer',
     HOUSING = 'Housing',
 };
 
-export enum PlanetSizes {
+export enum PlanetSizeType {
     TINY = 'Tiny',
     SMALL = 'Small',
     STANDARD = 'Standard',
@@ -14,25 +14,30 @@ export enum PlanetSizes {
     COLOSSAL = 'Colossal'
 }
 
-export enum StructureLimits {
-    TINY = 2,
-    SMALL = 3,
-    STANDARD = 4,
-    BIG = 5,
-    COLOSSAL = 6,
-};
+export const PlanetSizeInfos : Map<PlanetSizeType, PlanetSizeInfo> = new Map<PlanetSizeType, PlanetSizeInfo>([
+    [PlanetSizeType.TINY, {value: 3, structureLimits: 2}],
+    [PlanetSizeType.SMALL, {value: 4.5, structureLimits: 3}],
+    [PlanetSizeType.STANDARD, {value: 6, structureLimits: 4}],
+    [PlanetSizeType.BIG, {value: 7.5, structureLimits: 5}],
+    [PlanetSizeType.COLOSSAL, {value: 9, structureLimits: 6}]
+]) 
+
+export interface PlanetSizeInfo {
+    value : number;
+    structureLimits : number;
+}
 
 export class Planet {
     uuid: any;
-    size: PlanetSizes;
+    size: PlanetSizeType;
     owner: any;
     resources: Resources;
     position: Point;
-    structures: Array<StructureTypes>;
+    structures: Array<StructureType>;
     basePopulationCapacity: number;
     structureLimit: number;
 
-    constructor(uuid : any, position : Point, size : PlanetSizes, resources : Resources) {
+    constructor(uuid : any, position : Point, size : PlanetSizeType, resources : Resources) {
         this.uuid = uuid;
         this.position = position;
         this.size = size;
@@ -45,15 +50,15 @@ export class Planet {
 
     calculatePopulationCapacity() : number {
         switch (this.size) {
-            case PlanetSizes.TINY:
+            case PlanetSizeType.TINY:
                 return 5; 
-            case PlanetSizes.SMALL:
+            case PlanetSizeType.SMALL:
                 return 10;
-            case PlanetSizes.STANDARD:
+            case PlanetSizeType.STANDARD:
                 return 20;
-            case PlanetSizes.BIG:
+            case PlanetSizeType.BIG:
                 return 40;
-            case PlanetSizes.COLOSSAL:
+            case PlanetSizeType.COLOSSAL:
                 return 80;
             default:
                 return 0;
@@ -62,19 +67,23 @@ export class Planet {
 
     calculateStructureLimit() : number {
         switch(this.size) {
-            case PlanetSizes.TINY:
+            case PlanetSizeType.TINY:
                 return 2; 
-            case PlanetSizes.SMALL:
+            case PlanetSizeType.SMALL:
                 return 3;
-            case PlanetSizes.STANDARD:
+            case PlanetSizeType.STANDARD:
                 return 4;
-            case PlanetSizes.BIG:
+            case PlanetSizeType.BIG:
                 return 5;
-            case PlanetSizes.COLOSSAL:
+            case PlanetSizeType.COLOSSAL:
                 return 6;
             default:
                 return 0;
         }
+    }
+
+    getSizeValue() : number {
+        return (PlanetSizeInfos.get(this.size) as PlanetSizeInfo).value;
     }
 
     canBuild() : Boolean {
@@ -82,18 +91,11 @@ export class Planet {
         return currentCount < this.structureLimit;
     }
 
-    buildStructure(structureType : StructureTypes) {
+    buildStructure(structureType : StructureType) {
         if (this.canBuild()) {
             this.structures.push(structureType);
             return true;
         }
         return false;
-    }
-
-    gatherMinerals() {
-        const gatherRate = this.resources.mineral * 0.1; // Example: 10% of minerals per second
-        const structures = this.structures.find(obj => obj == StructureTypes.MINERAL_GATHERER)?.length
-        if (structures) return gatherRate * structures;
-        return 0;
     }
 }

@@ -1,5 +1,5 @@
 import QuadT from 'js-quadtree';
-import { Planet, PlanetSizes, Resources } from '../../shared';
+import { Planet, PlanetSizeInfo, PlanetSizeInfos, PlanetSizeType, Resources } from '../../shared';
 import { createNoise2D } from 'simplex-noise';
 import { v4 } from 'uuid';
 import { IndexedMap } from './util/IndexedMap';
@@ -15,15 +15,6 @@ const mineralResourceNoiseRes = 512;
 const gasResourceNoiseRes = 512;
 const planetCountNoiseRes = 512;
 const planetSizeNoiseRes = 1024;
-
-const planetSizes = [
-    { name: PlanetSizes.TINY, value: 3},
-    { name: PlanetSizes.SMALL, value: 4.5},
-    { name: PlanetSizes.STANDARD, value: 6},
-    { name: PlanetSizes.BIG, value: 7.5},
-    { name: PlanetSizes.COLOSSAL, value: 9}
-
-];
 
 const zones = [
     { name: "High Density", density: 0.6, planetCount: 3 },   // Lots of small planets
@@ -50,20 +41,21 @@ export function initializeGalaxy(galaxySize : number, planets : IndexedMap<strin
 }
 
 function generatePlanet(x : number, y : number) : Planet {
-    const size : PlanetSizes = getPlanetSize(x, y);
-    const resources : Resources = getPlanetResources(x, y, size);
+    const size : PlanetSizeType = getPlanetSize(x, y);
+    const resources : Resources = getPlanetResources(x, y, PlanetSizeInfos.get(size) as PlanetSizeInfo);
     return new Planet(v4(), new QuadT.Point(x, y), size, resources);
 }
 
-function getPlanetSize(x : number, y : number) : any {
+function getPlanetSize(x : number, y : number) : PlanetSizeType {
     const noise = planetSizeNoise(x / planetSizeNoiseRes, y / planetSizeNoiseRes);
     const normalizedNoise = (noise + 1) / 2;
     const value = normalizedNoise ** 2 * Math.random();
-    const index = Math.round(value * planetSizes.length); 
-    return planetSizes[Math.min(index, planetSizes.length - 1)];
+    const enumValues =  Object.values(PlanetSizeType);
+    const index = Math.round(value * enumValues.length); 
+    return enumValues[(Math.min(index, enumValues.length - 1))];
 }
 
-function getPlanetResources(x, y, size : any) : Resources {
+function getPlanetResources(x, y, size : PlanetSizeInfo) : Resources {
     const bioNoise = (bioResourceNoise(x / bioResourceNoiseRes, y / bioResourceNoiseRes) + 1) / 2;
     const mineralsNoise = (mineralResourceNoise(x / mineralResourceNoiseRes, y / mineralResourceNoiseRes) + 1) / 2;
     const gasNoise = (gasResourceNoise(x / gasResourceNoiseRes, y / gasResourceNoiseRes) + 1) / 2;

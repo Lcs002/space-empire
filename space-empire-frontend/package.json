@@ -1,12 +1,13 @@
 {
   "dependencies": {
     "@pixi/ui": "^2.1.5",
+    "@pixi/unsafe-eval": "^7.4.2",
     "color": "^4.2.3",
     "pixi.js": "^8.4.1",
     "socket.io-client": "^4.8.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 4201",
     "oth": "vite --port 4202",
     "build": "vite build"
   },

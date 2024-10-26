@@ -1,6 +1,6 @@
-import QuadT from 'js-quadtree';
+import QuadT, { Point } from 'js-quadtree';
 import { Server, Socket } from 'socket.io';
-import { Planet, Player } from 'shared';
+import { Planet, Player, ws_response_conquerPlanet, ws_response_getNearbyView as ws_response_getNearbyView, ws_response_getPlanetData, ws_response_getPlayerData } from 'shared';
 import { initializeGalaxy } from './galaxyGen';
 import { users } from './server';
 import { IndexedMap } from './util/IndexedMap';
@@ -10,7 +10,7 @@ const quadtreeBoundary = new QuadT.Box(0, 0, galaxySize, galaxySize);
 
 // Initialize quadtree and planets map
 export const planets: IndexedMap<string, Planet> = new IndexedMap();
-export const quadtree: QuadT.QuadTree = new QuadT.QuadTree(
+export const planetQuadTree: QuadT.QuadTree = new QuadT.QuadTree(
     quadtreeBoundary,
     {
         capacity: 10,
@@ -21,74 +21,69 @@ export const quadtree: QuadT.QuadTree = new QuadT.QuadTree(
 
 // Function to initialize the game state (galaxy)
 export function initializeGame() {
-  initializeGalaxy(galaxySize, planets, quadtree);
+  initializeGalaxy(galaxySize, planets, planetQuadTree);
 }
 
 // Function to handle new WebSocket connections
 export function handleConnection(socket: Socket) {
   console.log('A user connected');
 
-  socket.on('searchPlanets', ({ x, y, radius }) => searchPlanets(socket, { x, y, radius }));
-  socket.on('requestNearbyPlanets', (username: string) => requestNearbyPlanets(socket, username));
-  socket.on('conquerPlanet', ({ planetUuid, username }) => conquerPlanet(socket, planetUuid, username));
-  socket.on('playerAction', (data) => handlePlayerAction(socket, data));
+  ws_response_getNearbyView(socket, (params) => {
+    const player : Player = users[params.username];
+    const nearbyViewPlanets: Set<Planet> = new Set();
+
+    const nearbyPoints = planetQuadTree.query(
+      new QuadT.Circle(params.position.x, params.position.y, params.radius)
+    );
+
+    nearbyPoints.forEach(point => {
+      const planet: Planet = planets.getByKey(point.data.uuid) as Planet;
+      if (planet && planet.owner === params.username) {
+        nearbyViewPlanets.add(planet);
+
+        const view = planetQuadTree.query(new QuadT.Circle(planet.position.x, planet.position.y, 800));
+        view.forEach(viewPoint => {
+          const vPlanet = planets.getByKey(viewPoint.data.uuid) as Planet;
+
+          if (vPlanet) nearbyViewPlanets.add(vPlanet);
+        });
+      }
+    });
+
+    return { planets: Array.from(nearbyViewPlanets) };  
+  });
+  
+  ws_response_conquerPlanet(socket, (params) => {
+    const planet = planets.getByKey(params.planetUuid);
+    if (planet) {
+      if (planet.owner === null) {
+        planet.owner = params.username;
+        const player : Player = users[params.username];
+        player.ownedPlanets.push(params.planetUuid);
+        // TODO Broadcast to the owner and the near players
+        return { planetUuid: params.planetUuid };
+      } else {
+        return { error: 'This planet is already owned by another player.' };
+      }
+    }
+    return { error: 'No planet with uuid ' + params.planetUuid + ' was found.' }
+  });
+
+  ws_response_getPlanetData(socket, (params) => {
+    const planet : Planet | undefined = planets.getByKey(params.planetUuid);
+    if (planet) {
+      return {planet: planet};
+    } else {
+      throw Error('No planet with uuid ' + params.planetUuid + ' was found.');
+    }
+  });
+
+  ws_response_getPlayerData(socket, (params) => {
+    const player : Player = users[params.playerUuid];
+    return {player: player};
+  });
 
   socket.on('disconnect', () => {
     console.log('A user disconnected');
   });
-}
-
-// #######################
-// Socket Event Handlers
-// #######################
-
-// Search for planets within a radius
-function searchPlanets(socket: Socket, { x, y, radius }: { x: number; y: number; radius: number }) {
-  const results = quadtree.query(new QuadT.Circle(x, y, radius));
-  const foundPlanets = results.map(point => planets.getByKey(point.data.uuid));
-
-  // Send the planet data back to the client
-  socket.emit('foundPlanets', foundPlanets);
-}
-
-// Request nearby planets based on player's owned planets
-function requestNearbyPlanets(socket: Socket, username: string) {
-  const player : Player = users[username];
-  const nearbyPlanets: Planet[] = [];
-
-  player.ownedPlanets.forEach(ownedPlanet => {
-    const planet : Planet | undefined = planets.getByKey(ownedPlanet);
-    if (planet === undefined) return;
-    nearbyPlanets.push(planet);
-    const results = quadtree.query(new QuadT.Circle(planet.position.x, planet.position.y, 800));
-    results.forEach(point => {
-      const nearbyPlanet = planets.getByKey(point.data.uuid);
-      if (nearbyPlanet && !nearbyPlanets.includes(nearbyPlanet)) {
-        nearbyPlanets.push(nearbyPlanet);
-      }
-    });
-  });
-  socket.emit('foundNearbyPlanets', nearbyPlanets);
-}
-
-// Handle planet conquering
-function conquerPlanet(socket: Socket, planetUuid: string, username: string) {
-  const planet = planets.getByKey(planetUuid);
-  if (planet) {
-    if (planet.owner === null) {
-      planet.owner = username; // Assign ownership to the player
-      const player : Player = users[username];
-      player.ownedPlanets.push(planetUuid);
-      socket.emit('planetConquered', planetUuid); // Notify the conquering player
-      socket.broadcast.emit('planetDataUpdated', planet); // Notify all other players
-    } else {
-      socket.emit('error', { message: 'This planet is already owned by another player.' });
-    }
-  }
-}
-
-// Handle player actions (e.g., moving fleets, attacking, etc.)
-function handlePlayerAction(socket: Socket, data: any) {
-  // Broadcast player actions to other clients
-  socket.broadcast.emit('updateGameState', data);
 }
