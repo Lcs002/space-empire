@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { Planet, Point, SERVER_ROUTE, ws_request_conquerPlanet, ws_request_getNearbyView, ws_request_getPlanetData, ws_request_getPlayerData, ws_response_getPlanetData } from "../../../shared";
+import { PlanetData, Point, SERVER_ROUTE, StructureType, ws_request_buildStructure, ws_request_conquerPlanet, ws_request_getNearbyView, ws_request_getPlanetData, ws_request_getPlayerData, ws_response_getPlanetData } from "../../../shared";
 import { GameUI } from '../internal'
 
 export const renderedPlanets = new Map();
@@ -39,30 +39,40 @@ export async function conquerPlanet(planetUuid : any) {
             gameUI.highlightOwnedPlanet(renderedPlanet.container, renderedPlanet.data);
             gameUI.updateOwnedPlanetsList(planetUuid);
         }
+        selectPlanet(planetUuid);
         updateNearbyVision();
     } catch(error) {
-        console.log(error);
+        alert(error)
+    }
+}
+
+export async function buildStructure(plannetUuid : any, structureType : StructureType) {
+    try {
+        ws_request_buildStructure(socket, {planetUuid: plannetUuid, playerUuid: username, structureType: structureType});
+        selectPlanet(plannetUuid);
+    } catch(error) {
+        alert(error)
     }
 }
 
 export async function selectPlanet(planetUuid : any) {
-    const planet : Planet = await getPlanetData(planetUuid);
+    const planetData : PlanetData = await getPlanetData(planetUuid);
     gameUI.highlightPlanet(renderedPlanets.get(planetUuid).container, renderedPlanets.get(planetUuid).data);
-    gameUI.displayPlanetInfo(planet)
+    gameUI.displayPlanetInfo(planetData)
 }
 
-export async function getPlanetData(planetUuid : any) : Promise<Planet> {
-    let planet : Planet | null = null;
+export async function getPlanetData(planetUuid : any) : Promise<PlanetData> {
+    let planetData : PlanetData | null = null;
 
     try {
         const respPlanet = await ws_request_getPlanetData(socket, {planetUuid: planetUuid});
-        planet = respPlanet.planet;
+        planetData = respPlanet.planetData;
     } catch(error) {
         console.log(error);
     }
 
-    if (planet === null) throw Error("Planet uuid not found");
-    return planet;
+    if (planetData === null) throw Error("Planet uuid not found");
+    return planetData;
 }
 
 async function updatePlayerData() {

@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { users } from './server';
 import { planets } from './game';
-import { Planet, Player } from 'shared';
+import { PlanetData, PlayerData } from 'shared';
 
 const JWT_SECRET = 'your_jwt_secret_key';
 
@@ -14,7 +14,7 @@ export async function register(req: Request, res: Response) : Promise<Response> 
     return res.status(400).json({ message: 'Username already exists.' });
   }
 
-  users[username] = new Player(username, bcrypt.hashSync(password, 10));
+  users[username] = new PlayerData(username, bcrypt.hashSync(password, 10));
   return res.status(201).json({ message: 'User registered successfully.' });
 }
 
@@ -24,10 +24,10 @@ export function login(req: Request, res: Response) : Response {
 
   if (users[username] && bcrypt.compareSync(password, users[username].password)) {
     const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
-    const player : Player = users[username];
+    const player : PlayerData = users[username];
 
     if (player.ownedPlanets.length === 0) {
-      let random : Planet | null = planets.getRandom();
+      let random : PlanetData | null = planets.getRandom();
       if (random === null) throw Error();
       else {
         while(!random || random.owner != null) 

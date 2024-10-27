@@ -4,7 +4,7 @@ export enum ResourceTypes {
     GAS = 'Gas'
 }
 
-export class Resources {
+export class ResourcesData {
     bio: number;
     mineral: number;
     gas: number;

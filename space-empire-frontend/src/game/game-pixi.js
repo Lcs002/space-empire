@@ -1,7 +1,7 @@
 import { Application, Container, Graphics, Point } from "pixi.js";
 import Color from 'color';
-import { Planet, PlanetSizeInfos } from "../../../shared";
-import { conquerPlanet, getPlanetData, renderedPlanets, selectPlanet, updateNearbyVision, username } from "../internal";
+import { getStructureData, PlanetData, PlanetSizeInfos, StructureType } from "../../../shared";
+import { buildStructure, conquerPlanet, getPlanetData, renderedPlanets, selectPlanet, updateNearbyVision, username } from "../internal";
 
 export class GameUI {
     constructor() {
@@ -106,7 +106,7 @@ export class GameUI {
     }
 
     renderPlanet(planet) {
-        planet = Object.assign(new Planet(), planet);
+        planet = Object.assign(new PlanetData(), planet);
     
         const planetContainer = new Container();
         const color = this.getColorByResources(planet.resources);
@@ -127,7 +127,7 @@ export class GameUI {
     }
 
     drawPlanetGraphics(container, planet, color) {
-        planet = Object.assign(new Planet(), planet);
+        planet = Object.assign(new PlanetData(), planet);
 
         const atmosphere = new Graphics();
         atmosphere.beginFill(color.atmosphereColor);
@@ -143,7 +143,7 @@ export class GameUI {
     }
 
     highlightOwnedPlanet(container, planet) {
-        planet = Object.assign(new Planet(), planet);
+        planet = Object.assign(new PlanetData(), planet);
 
         const highlight = new Graphics();
         highlight.lineStyle(1, 0x00FF00); // Green outline
@@ -154,7 +154,7 @@ export class GameUI {
     }
 
     highlightOtherPlayerPlanet(container, planet) {
-        planet = Object.assign(new Planet(), planet);
+        planet = Object.assign(new PlanetData(), planet);
 
         const highlight = new Graphics();
         highlight.lineStyle(1, 0xFF0000); // Red outline for planets owned by other players
@@ -165,7 +165,7 @@ export class GameUI {
     }
 
     highlightPlanet(container, planet) {
-        planet = Object.assign(new Planet(), planet);
+        planet = Object.assign(new PlanetData(), planet);
 
         if (this.highlightedPlanet) {
             this.highlightedPlanet.removeChild(this.highlightedPlanet.highlightCircle);
@@ -174,28 +174,90 @@ export class GameUI {
         this.highlightedPlanet = container;
     
         const highlightCircle = new Graphics();
-        highlightCircle.lineStyle(2, 0xffff00); // Yellow outline
+        highlightCircle.lineStyle(1, 0xffff00); // Yellow outline
         highlightCircle.fill(0x000000, 0xFFFFFF);
-        highlightCircle.drawCircle(planet.position.x * this.STP, planet.position.y * this.STP, planet.getSizeValue() * 2 * this.STP);
+        highlightCircle.drawCircle(planet.position.x * this.STP, planet.position.y * this.STP, planet.getSizeValue() * 2.2 * this.STP);
         highlightCircle.endFill();
         this.highlightedPlanet.addChild(highlightCircle);
         this.highlightedPlanet.highlightCircle = highlightCircle; // Keep reference for removal
     }
 
     displayPlanetInfo(planet) {
-        planet = Object.assign(new Planet(), planet);
+        planet = Object.assign(new PlanetData(), planet);
 
         const planetDetailsDiv = document.getElementById('planet-details');
         planetDetailsDiv.innerHTML = `
             <P><strong>Owner:</strong> ${planet.owner}</p>
             <p><strong>Size:</strong> ${planet.size}</p>
-            <p><strong>Bio:</strong> ${planet.resources.bio}</p>
-            <p><strong>Minerals:</strong> ${planet.resources.mineral}</p>
-            <p><strong>Gas:</strong> ${planet.resources.gas}</p>
+            <p><strong>Bio:</strong> ${planet.resources.bio.toFixed(2)*100}%<strong> | Minerals:</strong> ${planet.resources.mineral.toFixed(2)*100}%<strong> | Gas:</strong> ${planet.resources.gas.toFixed(2)*100}%</p>
+            <p><strong>Bio:</strong> ${planet.availableResources.bio.toFixed(2)}<strong> | Minerals:</strong> ${planet.availableResources.mineral.toFixed(2)}<strong> | Gas:</strong> ${planet.availableResources.gas.toFixed(2)}</p>
             <button id="conquer-button">Conquer Planet</button>
         `;
 
+        if (planet.structures && planet.structures.length > 0) {
+            const structuresList = document.createElement('div');
+            structuresList.innerHTML = '<strong>Built Structures:</strong>';
+            const ul = document.createElement('ul');
+    
+            planet.structures.forEach((structure) => {
+                const li = document.createElement('li');
+                li.textContent = structure.type;
+                li.onclick = () => this.displayStructureDetails(structure);
+                ul.appendChild(li);
+            });
+    
+            structuresList.appendChild(ul);
+            planetDetailsDiv.appendChild(structuresList);
+        } else {
+            const noStructuresMessage = document.createElement('p');
+            noStructuresMessage.textContent = 'No structures built on this planet.';
+            planetDetailsDiv.appendChild(noStructuresMessage);
+        }
+
+        if (planet.owner === this.username) {
+            const availableStructuresDiv = document.createElement('div');
+            availableStructuresDiv.innerHTML = '<strong>Available Structures to Build:</strong>';
+            
+            Object.values(StructureType).forEach((structureType) => {
+                const structureData = getStructureData(structureType);
+                
+                const structureDiv = document.createElement('div');
+                structureDiv.innerHTML = `
+                    <p style="font-size: 14px">${structureData.type}</p>
+                    <p style="font-size: 10px"><strong>Cost:</strong> Bio: ${structureData.cost.bio}, Minerals: ${structureData.cost.mineral}, Gas: ${structureData.cost.gas}</p>
+                    <p style="font-size: 10px"><strong>Size:</strong> ${structureData.size}</p>
+                    <p style="font-size: 10px"><strong>Description:</strong></p>
+                `;
+                
+                const buildButton = document.createElement('button');
+                buildButton.textContent = 'Build';
+                buildButton.addEventListener('click', () => buildStructure(planet.uuid, structureType));
+        
+                structureDiv.appendChild(buildButton);
+                availableStructuresDiv.appendChild(structureDiv);
+            });
+            
+            planetDetailsDiv.appendChild(availableStructuresDiv);
+        }
+
         document.getElementById("conquer-button").onclick = () => conquerPlanet(planet.uuid);
+    }
+
+    displayStructureDetails(structure) {
+        const structureDetailsDiv = document.getElementById('planet-details');
+    
+        structureDetailsDiv.innerHTML += `
+            <hr>
+            <h4>Structure Details:</h4>
+            <p><strong>Type:</strong> ${structure.type}</p>
+            <p><strong>Cost:</strong></p>
+            <ul>
+                <li>Bio: ${structure.cost.bio}</li>
+                <li>Minerals: ${structure.cost.mineral}</li>
+                <li>Gas: ${structure.cost.gas}</li>
+            </ul>
+            <p><strong>Size:</strong> ${structure.size}</p>
+        `;
     }
 
     updatePlayerDataUI(player) {
@@ -234,15 +296,16 @@ export class GameUI {
         this.gameContainer.x = (this.app.screen.width / 2) - planetX * this.cameraZoom;
         this.gameContainer.y = (this.app.screen.height / 2) - planetY * this.cameraZoom;
     
+        selectPlanet(planetUuid);
         updateNearbyVision();
     }
 
     getColorByResources(resources) {
         const { bio, gas, minerals } = resources;
     
-        const bioColor = Color({ h: 120, s: bio / 9 * 100, l: 40 }).rgb().array(); // Green for bio
-        const gasColor = Color({ h: 240, s: gas / 9 * 100, l: 40 }).rgb().array(); // Blue for gas
-        const mineralColor = Color({ h: 0, s: minerals / 9 * 100, l: 40 }).rgb().array(); // Red for minerals
+        const bioColor = Color({ h: 120, s: bio * 100, l: 40 }).rgb().array(); // Green for bio
+        const gasColor = Color({ h: 240, s: gas * 100, l: 40 }).rgb().array(); // Blue for gas
+        const mineralColor = Color({ h: 0, s: minerals * 100, l: 40 }).rgb().array(); // Red for minerals
         const min = (mineralColor[0] << 16) | (mineralColor[1] << 8) | mineralColor[2]
         return {
             planetColor: (bioColor[0] << 16) | (bioColor[1] << 8) | bioColor[2] | min,

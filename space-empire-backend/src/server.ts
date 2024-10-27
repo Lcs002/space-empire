@@ -5,7 +5,7 @@ import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { handleConnection, initializeGame } from './game';
 import { register, login } from './auth';
-import { Player } from 'shared'; 
+import { PlayerData } from 'shared'; 
 import jwt from 'jsonwebtoken'; 
 
 const app = express();
@@ -16,7 +16,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Users Data
-export const users = new Map<string, Player>();
+export const users = new Map<string, PlayerData>();
 
 // Create HTTP server and WebSocket server
 const server = http.createServer(app);

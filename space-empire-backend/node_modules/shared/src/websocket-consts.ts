@@ -1,6 +1,7 @@
 import { Socket } from 'socket.io';
-import { Planet } from './planet';
-import { Player } from './player';
+import { PlanetData } from './planet';
+import { StructureType } from "./structure";
+import { PlayerData } from './player';
 import { Point } from './point';
 
 export enum WebSocketCalls {
@@ -8,7 +9,8 @@ export enum WebSocketCalls {
     GetNearbyPlanets = "requestNearbyPlanets",
     GetPlanetData = "getPlanetData",
     ConquerPlanet = "conquerPlanet",
-    ErrorPlanetAlreadyOwned = "errorPlanetAlreadyOwned"
+    ErrorPlanetAlreadyOwned = "errorPlanetAlreadyOwned",
+    BuildStructure = "buildStructure"
 }
 
 // Conquer Planet
@@ -48,7 +50,7 @@ export interface GetNearbyViewParams {
     radius: number;
 }
 export interface SenNearbyViewParams {
-    planets: Array<Planet>;
+    planets: Array<PlanetData>;
 }
 export function ws_request_getNearbyView(socket: any, params: GetNearbyViewParams): Promise<SenNearbyViewParams> {
     return new Promise((resolve, reject) => {
@@ -77,7 +79,7 @@ export interface GetPlanetDataParams {
     planetUuid: any
 }
 export interface SenPlanetDataParams {
-    planet: Planet
+    planetData: PlanetData
 }
 export function ws_request_getPlanetData(socket: any, params: GetPlanetDataParams): Promise<SenPlanetDataParams> {
     return new Promise((resolve, reject) => {
@@ -106,7 +108,7 @@ export interface GetPlayerDataParams {
     playerUuid: any
 }
 export interface SenPlayerDataParams {
-    player: Player;
+    player: PlayerData;
 }
 export function ws_request_getPlayerData(socket: any, params: GetPlayerDataParams): Promise<SenPlayerDataParams> {
     return new Promise((resolve, reject) => {
@@ -129,3 +131,31 @@ export function ws_response_getPlayerData(socket: any, callback: (params: GetPla
         }
     });
 }
+
+export interface BuildStructureParams {
+    planetUuid: any,
+    playerUuid: any,
+    structureType: StructureType
+}
+export function ws_request_buildStructure(socket: any, params: BuildStructureParams): Promise<void> {
+    return new Promise((resolve, reject) => {
+        socket.emit(WebSocketCalls.BuildStructure, params, (response: void | { error: string }) => {
+            if (response) {
+                reject(new Error(response.error));
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+export function ws_response_buildStructure(socket: any, callback: (params: BuildStructureParams) => void | { error: string }) {
+    socket.on(WebSocketCalls.BuildStructure, (params: BuildStructureParams, ackCallback: (response: void | { error: string }) => void) => {
+        try {
+            const response = callback(params);
+            ackCallback(response);
+        } catch (error) {
+            ackCallback({ error: error.message });
+        }
+    });
+}
+

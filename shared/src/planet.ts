@@ -1,10 +1,6 @@
 import { Point } from "./point";
-import { Resources } from "./resources";
-
-export enum StructureType {
-    MINERAL_GATHERER = 'Mineral Gatherer',
-    HOUSING = 'Housing',
-};
+import { ResourcesData } from "./resources";
+import { StructureData, StructureType } from "./structure";
 
 export enum PlanetSizeType {
     TINY = 'Tiny',
@@ -27,25 +23,25 @@ export interface PlanetSizeInfo {
     structureLimits : number;
 }
 
-export class Planet {
+export class PlanetData {
     uuid: any;
     size: PlanetSizeType;
     owner: any;
-    resources: Resources;
+    resources: ResourcesData;
+    bonusResources: ResourcesData;
+    availableResources: ResourcesData;
     position: Point;
-    structures: Array<StructureType>;
-    basePopulationCapacity: number;
-    structureLimit: number;
+    structures: Array<StructureData>;
 
-    constructor(uuid : any, position : Point, size : PlanetSizeType, resources : Resources) {
+    constructor(uuid : any, position : Point, size : PlanetSizeType, resources : ResourcesData) {
         this.uuid = uuid;
         this.position = position;
         this.size = size;
         this.resources = resources; 
+        this.bonusResources = new ResourcesData(0, 0, 0);
+        this.availableResources = new ResourcesData(0, 0, 0);
         this.owner = null;
         this.structures = [];
-        this.basePopulationCapacity = this.calculatePopulationCapacity();
-        this.structureLimit = this.calculateStructureLimit();
     }
 
     calculatePopulationCapacity() : number {
@@ -82,20 +78,28 @@ export class Planet {
         }
     }
 
+    calculateAvailableStructureSize() : number {
+        let available = this.calculateStructureLimit();
+        this.structures.forEach(structure => {
+            available -= structure.size;
+        });
+        return available;
+    }
+
     getSizeValue() : number {
-        return (PlanetSizeInfos.get(this.size) as PlanetSizeInfo).value;
-    }
-
-    canBuild() : Boolean {
-        const currentCount = this.structures.length;
-        return currentCount < this.structureLimit;
-    }
-
-    buildStructure(structureType : StructureType) {
-        if (this.canBuild()) {
-            this.structures.push(structureType);
-            return true;
+        switch(this.size) {
+            case PlanetSizeType.TINY:
+                return 3; 
+            case PlanetSizeType.SMALL:
+                return 4.5;
+            case PlanetSizeType.STANDARD:
+                return 6;
+            case PlanetSizeType.BIG:
+                return 7.5;
+            case PlanetSizeType.COLOSSAL:
+                return 9;
+            default:
+                return 0;
         }
-        return false;
     }
 }
