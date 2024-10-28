@@ -36,7 +36,8 @@ function initializeLoop() {
 }
 
 export function handleConnection(socket: Socket) {
-  console.log('A user connected');
+  console.log(`A user connected: ${socket.data.username}`);
+  socket.join(socket.data.username);
 
   GetNearbyViewAction.response(socket, (params) => {
     const nearbyViewPlanets: Set<PlanetData> = new Set();
@@ -61,7 +62,7 @@ export function handleConnection(socket: Socket) {
 
     return { planets: Array.from(nearbyViewPlanets) };  
   });
-  
+
   ConquerPlanetAction.response(socket, (params) => {
     const planet = planets.getByKey(params.planetUuid);
     if (!planet) 

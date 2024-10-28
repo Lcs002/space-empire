@@ -20,7 +20,7 @@ export const users = new Map<string, PlayerData>();
 
 // Create HTTP server and WebSocket server
 const server = http.createServer(app);
-const io = new SocketIOServer(server, {
+export const socketServer = new SocketIOServer(server, {
   cors: {
     origin: "*", // Allow frontend on any origin
     methods: ["GET", "POST"]
@@ -39,18 +39,21 @@ app.post('/login', (req: Request, res: Response) => {
     login(req, res)
 });
 
-io.use((socket, next) => {
-    const token = socket.handshake.query.token;
-    if (!token) return next(new Error('Authentication error'));
+socketServer.use((socket, next) => {
+  const token = socket.handshake.query.token;
+  if (!token) return next(new Error('Authentication error'));
 
-    jwt.verify(token, 'your_jwt_secret_key', (err, decoded) => {
-        if (err) return next(new Error('Authentication error'));
-        next();
-    });
+  jwt.verify(token, 'your_jwt_secret_key', (err, decoded) => {
+      if (err) return next(new Error('Authentication error'));
+
+      // Store username in socket object
+      socket.data.username = decoded.username;
+      next();
+  });
 });
 
 // WebSocket connection handling
-io.on('connection', (socket) => handleConnection(socket));
+socketServer.on('connection', (socket) => handleConnection(socket));
 
 // Start the server
 server.listen(PORT, () => {

@@ -21,7 +21,6 @@ socket.on('connect_error', (err) => {
     window.location.href = '../auth/login.html'; 
 });
 
-console.log("B")
 const gameUI = new GameUI();
 
 (async () => {
@@ -49,7 +48,6 @@ export async function conquerPlanet(planetUuid : any) {
 export async function buildStructure(plannetUuid : any, structureType : StructureType) {
     try {
         await BuildStructureAction.request(socket, {planetUuid: plannetUuid, playerUuid: username, structureType: structureType});
-        selectPlanet(plannetUuid);
     } catch(error) {
         alert(error)
     }

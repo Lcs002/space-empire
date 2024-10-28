@@ -4,7 +4,7 @@ import { Observable } from "./observable";
 
 const DEPLETION_FACTOR : number = 0.1 / 100; 
 
-export class Planet extends Observable {
+export class Planet extends Observable<PlanetData> {
     data : PlanetData;
 
     constructor(planetData : PlanetData) {
@@ -28,7 +28,9 @@ export class Planet extends Observable {
 
         this.data.structures.push(structureData);
         const structure : Structure<any> = getStructure(structureData);
-        structure.install(this.data);
+        structure.install(this);
+
+        this.notifyObservers('onBuiltStructure', this.data);
     }
 
     extract() {
@@ -49,5 +51,7 @@ export class Planet extends Observable {
         this.data.resources.bio -= extractedBioFac * DEPLETION_FACTOR;
         this.data.resources.gas -= extractedGasFac * DEPLETION_FACTOR;
         this.data.resources.mineral -= extractedMineralFac * DEPLETION_FACTOR;
+
+        this.notifyObservers('onExtract', this.data);
     }
 }

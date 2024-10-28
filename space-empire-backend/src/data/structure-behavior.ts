@@ -1,46 +1,47 @@
 import { HousingStructureData, MineralGathererStructureData, PlanetData, StructureData, StructureType } from "shared";
 import { planets } from "../game";
+import { Planet } from "./planet-behavior";
 
 export abstract class Structure<T extends StructureData> {
-    structureData : T;
+    data : T;
     
     constructor(structureData : T) {
-        this.structureData = structureData;
+        this.data = structureData;
     }
 
-    install(planetData : PlanetData) : void {
-        if (this.structureData.planetUuid != null) return;
-        this.structureData.planetUuid = planetData.uuid;
-        this._install(planetData);
+    install(planet : Planet) : void {
+        if (this.data.planetUuid != null) return;
+        this.data.planetUuid = planet.data.uuid;
+        this._install(planet);
     }
 
     uninstall() : void {
-        if (this.structureData.planetUuid == null) return;
+        if (this.data.planetUuid == null) return;
         this._uninstall();
-        this.structureData.planetUuid = null;
+        this.data.planetUuid = null;
     }
 
-    abstract _install(planetData : PlanetData) : void;
+    abstract _install(planet : Planet) : void;
     abstract _uninstall() : void;
 }
 
 export class MineralGathererStructure extends Structure<MineralGathererStructureData> {
-    _install(planetData: PlanetData): void {
-        planetData.bonusResources.mineral += 0.2;
+    _install(planet: Planet): void {
+        planet.data.bonusResources.mineral += 0.2;
     }
     _uninstall(): void {
-        const planetData : PlanetData = planets.getByKey(this.structureData.planetUuid) as PlanetData;
-        planetData.bonusResources.mineral -= 0.2;
+        const planet : Planet = planets.getByKey(this.data.planetUuid) as Planet;
+        planet.data.bonusResources.mineral -= 0.2;
     }
 }
 
 export class HousingStructure extends Structure<HousingStructureData> {
-    _install(planetData: PlanetData): void {
-        planetData.bonusResources.bio += 0.1;
+    _install(planet: Planet): void {
+        planet.data.bonusResources.bio += 0.1;
     }
     _uninstall(): void {
-        const planetData : PlanetData = planets.getByKey(this.structureData.planetUuid) as PlanetData;
-        planetData.bonusResources.bio -= 0.1;
+        const planet : Planet = planets.getByKey(this.data.planetUuid) as Planet;
+        planet.data.bonusResources.bio -= 0.1;
     }
 }
 
