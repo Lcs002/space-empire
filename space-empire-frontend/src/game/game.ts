@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { PlanetData, Point, SERVER_ROUTE, StructureType, ws_request_buildStructure, ws_request_conquerPlanet, ws_request_getNearbyView, ws_request_getPlanetData, ws_request_getPlayerData, ws_response_getPlanetData } from "../../../shared";
+import { BuildStructureAction, ConquerPlanetAction, GetNearbyViewAction, GetPlanetDataAction, GetPlayerDataAction, PlanetData, Point, SERVER_ROUTE, StructureType } from "../../../shared";
 import { GameUI } from '../internal'
 
 export const renderedPlanets = new Map();
@@ -32,7 +32,7 @@ const gameUI = new GameUI();
 
 export async function conquerPlanet(planetUuid : any) {
     try {
-        const resp = await ws_request_conquerPlanet(socket, {planetUuid: planetUuid, username: username as string});
+        const resp = await ConquerPlanetAction.request(socket, {planetUuid: planetUuid, username: username as string});
         const renderedPlanet = renderedPlanets.get(resp.planetUuid);
         if (renderedPlanet) {
             renderedPlanet.data.owner = username;
@@ -48,7 +48,7 @@ export async function conquerPlanet(planetUuid : any) {
 
 export async function buildStructure(plannetUuid : any, structureType : StructureType) {
     try {
-        ws_request_buildStructure(socket, {planetUuid: plannetUuid, playerUuid: username, structureType: structureType});
+        await BuildStructureAction.request(socket, {planetUuid: plannetUuid, playerUuid: username, structureType: structureType});
         selectPlanet(plannetUuid);
     } catch(error) {
         alert(error)
@@ -56,6 +56,10 @@ export async function buildStructure(plannetUuid : any, structureType : Structur
 }
 
 export async function selectPlanet(planetUuid : any) {
+    if (gameUI.selectedPlanet != null) {
+
+    }
+
     const planetData : PlanetData = await getPlanetData(planetUuid);
     gameUI.highlightPlanet(renderedPlanets.get(planetUuid).container, renderedPlanets.get(planetUuid).data);
     gameUI.displayPlanetInfo(planetData)
@@ -65,7 +69,7 @@ export async function getPlanetData(planetUuid : any) : Promise<PlanetData> {
     let planetData : PlanetData | null = null;
 
     try {
-        const respPlanet = await ws_request_getPlanetData(socket, {planetUuid: planetUuid});
+        const respPlanet = await GetPlanetDataAction.request(socket, {planetUuid: planetUuid});
         planetData = respPlanet.planetData;
     } catch(error) {
         console.log(error);
@@ -77,7 +81,7 @@ export async function getPlanetData(planetUuid : any) : Promise<PlanetData> {
 
 async function updatePlayerData() {
     try {
-        const respPlayer = await ws_request_getPlayerData(socket, {playerUuid: username});
+        const respPlayer = await GetPlayerDataAction.request(socket, {playerUuid: username});
         gameUI.updatePlayerDataUI(respPlayer.player);
     } catch(error) {
         console.log(error);
@@ -86,7 +90,7 @@ async function updatePlayerData() {
 
 export async function updateNearbyVision() {
     try {
-        const nearbyView = await ws_request_getNearbyView(
+        const nearbyView = await GetNearbyViewAction.request(
             socket, 
             {
                 username: username, 

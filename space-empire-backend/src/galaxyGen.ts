@@ -3,6 +3,7 @@ import { PlanetData, PlanetSizeInfo, PlanetSizeInfos, PlanetSizeType, ResourcesD
 import { createNoise2D } from 'simplex-noise';
 import { v4 } from 'uuid';
 import { IndexedMap } from './util/IndexedMap';
+import { Planet } from './data/planet-behavior';
 
 const bioResourceNoise = createNoise2D();
 const mineralResourceNoise = createNoise2D();
@@ -25,22 +26,23 @@ const zones = [
 const zoneSize = 250;
 
 // Function to initialize the galaxy
-export function initializeGalaxy(galaxySize : number, planets : IndexedMap<string, PlanetData>, quadtree : QuadT.QuadTree) {
+export function initializeGalaxy(galaxySize : number, planets : IndexedMap<string, Planet>, quadtree : QuadT.QuadTree) {
     for (let x = 0; x < galaxySize; x += zoneSize) {
         for (let y = 0; y < galaxySize; y += zoneSize) {
             const noiseValue = planetCountNoise(x / planetCountNoiseRes, y / planetCountNoiseRes);
             const planetCount = Math.max(1, Math.floor(noiseValue * 5)); 
 
             for (let i = 0; i < planetCount; i++) {
-                const planet : PlanetData = generatePlanet(x + (Math.random() * zoneSize), y + (Math.random() * zoneSize));
-                planets.set(planet.uuid, planet);
-                quadtree.insert(new QuadT.Point(planet.position.x, planet.position.y, {uuid: planet.uuid}));
+                const planetData : PlanetData = generatePlanetData(x + (Math.random() * zoneSize), y + (Math.random() * zoneSize));
+                const planet : Planet = new Planet(planetData);
+                planets.set(planetData.uuid, planet);
+                quadtree.insert(new QuadT.Point(planetData.position.x, planetData.position.y, {uuid: planetData.uuid}));
             }
         }
     }
 }
 
-function generatePlanet(x : number, y : number) : PlanetData {
+function generatePlanetData(x : number, y : number) : PlanetData {
     const size : PlanetSizeType = getPlanetSize(x, y);
     const resources : ResourcesData = getPlanetResources(x, y);
     return new PlanetData(v4(), new QuadT.Point(x, y), size, resources);
