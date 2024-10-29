@@ -1,6 +1,7 @@
 import { HousingStructureData, MineralGathererStructureData, PlanetData, StructureData, StructureType } from "shared";
-import { planets } from "../game";
+import { } from "../game";
 import { Planet } from "./planet-behavior";
+import { PlanetManager } from "../manager/planet-manager";
 
 export abstract class Structure<T extends StructureData> {
     data : T;
@@ -30,7 +31,7 @@ export class MineralGathererStructure extends Structure<MineralGathererStructure
         planet.data.bonusResources.mineral += 0.2;
     }
     _uninstall(): void {
-        const planet : Planet = planets.getByKey(this.data.planetUuid) as Planet;
+        const planet : Planet = PlanetManager.getPlanet(this.data.planetUuid);
         planet.data.bonusResources.mineral -= 0.2;
     }
 }
@@ -40,7 +41,7 @@ export class HousingStructure extends Structure<HousingStructureData> {
         planet.data.bonusResources.bio += 0.1;
     }
     _uninstall(): void {
-        const planet : Planet = planets.getByKey(this.data.planetUuid) as Planet;
+        const planet : Planet = PlanetManager.getPlanet(this.data.planetUuid);
         planet.data.bonusResources.bio -= 0.1;
     }
 }

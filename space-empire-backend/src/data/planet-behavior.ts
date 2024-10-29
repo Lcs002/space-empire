@@ -1,4 +1,4 @@
-import { getStructureData, PlanetData, StructureData, StructureType } from "shared";
+import { getStructureData, NotifyPlanetBuiltStructure, NotifyPlanetExtractedResources, PlanetData, StructureData, StructureType } from "shared";
 import { getStructure, Structure } from "./structure-behavior";
 import { Observable } from "./observable";
 
@@ -30,7 +30,7 @@ export class Planet extends Observable<PlanetData> {
         const structure : Structure<any> = getStructure(structureData);
         structure.install(this);
 
-        this.notifyObservers('onBuiltStructure', this.data);
+        this.notifyObservers(new NotifyPlanetBuiltStructure(this.data));
     }
 
     extract() {
@@ -52,6 +52,6 @@ export class Planet extends Observable<PlanetData> {
         this.data.resources.gas -= extractedGasFac * DEPLETION_FACTOR;
         this.data.resources.mineral -= extractedMineralFac * DEPLETION_FACTOR;
 
-        this.notifyObservers('onExtract', this.data);
+        this.notifyObservers(new NotifyPlanetExtractedResources(this.data));
     }
 }

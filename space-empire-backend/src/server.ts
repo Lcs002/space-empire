@@ -1,22 +1,19 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { handleConnection, initializeGame } from './game';
-import { register, login } from './auth';
-import { PlayerData } from 'shared'; 
+import { Game } from './game';
 import jwt from 'jsonwebtoken'; 
+import { PlayerManager } from './manager/player-manager';
 
+export const JWT_SECRET = 'your_jwt_secret_key';
 const app = express();
 const PORT = 5000;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-
-// Users Data
-export const users = new Map<string, PlayerData>();
 
 // Create HTTP server and WebSocket server
 const server = http.createServer(app);
@@ -27,17 +24,14 @@ export const socketServer = new SocketIOServer(server, {
   }
 });
 
-// Initialize game state
-initializeGame();
 
+Game.initializeGame();
 
-app.post('/register', async (req: Request, res: Response) => {
-    register(req, res);
-});
+function setupHTTP(app: any) {
+  PlayerManager.setupHTTP(app);
+}
 
-app.post('/login', (req: Request, res: Response) => {
-    login(req, res)
-});
+setupHTTP(app);
 
 socketServer.use((socket, next) => {
   const token = socket.handshake.query.token;
@@ -53,7 +47,7 @@ socketServer.use((socket, next) => {
 });
 
 // WebSocket connection handling
-socketServer.on('connection', (socket) => handleConnection(socket));
+socketServer.on('connection', (socket) => Game.setupWebSocket(socket));
 
 // Start the server
 server.listen(PORT, () => {

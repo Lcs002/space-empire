@@ -11,7 +11,8 @@ export class GameUI {
         this.MAX_ZOOM = 8;
         this.STP = 0.8;
         this.gameContainer = null;
-        this.selectedPlanet = null;
+        this.selectedPlanetUuid = null;
+        this.selectedPlanetContainer = null;
         this.cameraPosition = new Point(0, 0);
         this.app = null;
         this.init = false;
@@ -167,19 +168,20 @@ export class GameUI {
     highlightPlanet(container, planet) {
         planet = Object.assign(new PlanetData(), planet);
 
-        if (this.selectedPlanet) {
-            this.selectedPlanet.removeChild(this.selectedPlanet.highlightCircle);
+        if (this.selectedPlanetContainer) {
+            this.selectedPlanetContainer.removeChild(this.selectedPlanetContainer.highlightCircle);
         }
     
-        this.selectedPlanet = container;
+        this.selectedPlanetContainer = container;
+        this.selectedPlanetUuid = planet.uuid;
     
         const highlightCircle = new Graphics();
         highlightCircle.lineStyle(1, 0xffff00); // Yellow outline
         highlightCircle.fill(0x000000, 0xFFFFFF);
         highlightCircle.drawCircle(planet.position.x * this.STP, planet.position.y * this.STP, planet.getSizeValue() * 2.2 * this.STP);
         highlightCircle.endFill();
-        this.selectedPlanet.addChild(highlightCircle);
-        this.selectedPlanet.highlightCircle = highlightCircle; // Keep reference for removal
+        this.selectedPlanetContainer.addChild(highlightCircle);
+        this.selectedPlanetContainer.highlightCircle = highlightCircle; // Keep reference for removal
     }
 
     displayPlanetInfo(planet) {

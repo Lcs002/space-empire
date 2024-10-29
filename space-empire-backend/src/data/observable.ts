@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
 import { socketServer } from "../server";
-import { PlanetData } from "shared";
+import { PlanetData, Notification } from "shared";
 
 export abstract class Observable<T> {
     private events : Map<string, Set<string>>;
@@ -21,43 +21,11 @@ export abstract class Observable<T> {
             this.events.get(event)?.delete(playerUuid);
     }
 
-    notifyObservers(event : string, data : T) {
-        if (!this.events.has(event)) return;
+    notifyObservers(notification : Notification<T>) {
+        if (!this.events.has(notification.event)) return;
 
-        this.events.get(event)?.forEach((playerUuid) => {
-            socketServer.to(playerUuid).emit(event, data);
+        this.events.get(notification.event)?.forEach((playerUuid) => {
+            notification.send(socketServer, playerUuid);
         });
     }
 }
-
-/*
-class Notification<T> {
-    event : string;
-    data : T;
-
-    constructor(event : string, data : T) {
-        this.event = event;
-        this.data = data;
-    }
-
-    send(playerUuid : string) {
-        Notification.send(playerUuid, this.event, this.data);
-    }
-
-    static send<T>(playerUuid : string, event : string, data : T) {
-        socketServer.to(playerUuid).emit(event, data);
-    }
-}
-
-export class PlanetBuildNotification extends Notification<PlanetData> {
-    static event = 'planetBuildNotification';
-
-    constructor(data : PlanetData) {
-        super('planetBuildNotification', data);
-    }
-
-    static send() {
-        super.send()
-    }
-}
-*/

@@ -1,5 +1,5 @@
 import { io } from "socket.io-client";
-import { BuildStructureAction, ConquerPlanetAction, GetNearbyViewAction, GetPlanetDataAction, GetPlayerDataAction, PlanetData, Point, SERVER_ROUTE, StructureType } from "../../../shared";
+import { BuildStructureAction, ConquerPlanetAction, GetNearbyViewAction, GetPlanetDataAction, GetPlayerDataAction, NotifyPlanetBuiltStructure, NotifyPlanetExtractedResources, PlanetData, Point, SERVER_ROUTE, StructureType, SubscribePlanetEvent, UnsubscribePlanetEvent, WebSocketEvents } from "../../../shared";
 import { GameUI } from '../internal'
 
 export const renderedPlanets = new Map();
@@ -25,9 +25,26 @@ const gameUI = new GameUI();
 
 (async () => {
     await gameUI.initialize(socket, username); 
+    await setupEventHandlers();
     await updatePlayerData();
     await updateNearbyVision();
 })();
+
+async function setupEventHandlers() {
+    NotifyPlanetBuiltStructure.on(socket, (params) => {
+        if (renderedPlanets.has(params.uuid))
+            renderedPlanets.get(params.uuid).data = params;
+        if (gameUI.selectedPlanetUuid === params.uuid)
+            gameUI.displayPlanetInfo(params);
+    });
+
+    NotifyPlanetExtractedResources.on(socket, (params) => {
+        if (renderedPlanets.has(params.uuid))
+            renderedPlanets.get(params.uuid).data = params;
+        if (gameUI.selectedPlanetUuid === params.uuid)
+            gameUI.displayPlanetInfo(params);
+    });
+}
 
 export async function conquerPlanet(planetUuid : any) {
     try {
@@ -54,8 +71,20 @@ export async function buildStructure(plannetUuid : any, structureType : Structur
 }
 
 export async function selectPlanet(planetUuid : any) {
-    if (gameUI.selectedPlanet != null) {
-
+    if (gameUI.selectedPlanetUuid != null) {
+        try {
+            UnsubscribePlanetEvent.request(socket, { planetUuid: gameUI.selectedPlanetUuid, event: WebSocketEvents.PlanetBuiltStructure });
+            UnsubscribePlanetEvent.request(socket, { planetUuid: gameUI.selectedPlanetUuid, event: WebSocketEvents.PlanetExtractedResources });
+        } catch(error) {
+            console.log(error);
+        }
+    }
+    
+    try {
+        SubscribePlanetEvent.request(socket, { planetUuid: planetUuid, event: WebSocketEvents.PlanetBuiltStructure});
+        SubscribePlanetEvent.request(socket, { planetUuid: planetUuid, event: WebSocketEvents.PlanetExtractedResources});
+    } catch(error) {
+        console.log(error);
     }
 
     const planetData : PlanetData = await getPlanetData(planetUuid);
